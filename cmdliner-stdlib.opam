@@ -5,7 +5,7 @@ homepage:     "https://github.com/mirage/cmdliner-stdlib"
 bug-reports:  "https://github.com/mirage/cmdliner-stdlib/issues/"
 dev-repo:     "git+https://github.com/mirage/cmdliner-stdlib.git"
 license:      "ISC"
-tags:         ["org:mirage" "org:xapi-project"]
+tags:         ["org:mirage"]
 doc:          "https://mirage.github.io/cmdliner-stdlib/"
 
 build: [
@@ -17,7 +17,6 @@ build: [
 depends: [
   "ocaml" {>= "4.08.0"}
   "dune" {>= "2.9.0"}
-  "dune" {with-test & >= "3.0.0"}
   "cmdliner" {>= "1.0.0"}
 ]
 synopsis: "A collection of cmdliner terms to control OCaml runtime parameters"
