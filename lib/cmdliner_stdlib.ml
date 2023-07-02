@@ -16,20 +16,20 @@ open Cmdliner
 
 let ocaml_section = "OCAML RUNTIME PARAMETERS"
 
-let backtrace =
+let backtrace ~default =
   let doc =
     "Trigger the printing of a stack backtrace when an uncaught exception \
      aborts the unikernel."
   in
   let doc = Arg.info ~docs:ocaml_section ~docv:"BOOL" ~doc [ "backtrace" ] in
-  Arg.(value & opt bool true doc)
+  Arg.(value & opt bool default doc)
 
-let randomize_hashtables =
+let randomize_hashtables ~default =
   let doc = "Turn on randomization of all hash tables by default." in
   let doc =
     Arg.info ~docs:ocaml_section ~docv:"BOOL" ~doc [ "randomize-hashtables" ]
   in
-  Arg.(value & opt bool true doc)
+  Arg.(value & opt bool default doc)
 
 let policy_of_int = function
   | 0 -> `Next_fit
@@ -188,7 +188,7 @@ let gc_control () =
     $ custom_minor_ratio d
     $ custom_minor_max_size d)
 
-let setup ?backtrace:(b = true) ?randomize_hashtables:(r = true)
+let setup ?backtrace:(b = Some true) ?randomize_hashtables:(r = Some true)
     ?gc_control:(c = true) () =
   let f backtrace randomize_hashtables gc_control =
     let () =
@@ -204,7 +204,11 @@ let setup ?backtrace:(b = true) ?randomize_hashtables:(r = true)
   in
   let some c = Term.(const Option.some $ c) in
   let none = Term.const None in
-  let b = if b then some backtrace else none in
-  let r = if r then some randomize_hashtables else none in
+  let b = match b with None -> none | Some b -> some (backtrace ~default:b) in
+  let r =
+    match r with
+    | None -> none
+    | Some b -> some (randomize_hashtables ~default:b)
+  in
   let c = if c then some (gc_control ()) else none in
   Term.(const f $ b $ r $ c)
