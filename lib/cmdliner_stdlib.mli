@@ -26,11 +26,12 @@ val backtrace : default:bool -> bool Term.t
 
 val randomize_hashtables : default:bool -> bool Term.t
 (** [--randomize-hashtables]: Randomize all hash tables. [default] is the
-    default value is the parameter is not provided on the command-line. *)
+    default value if the parameter is not provided on the command-line. *)
 
-val gc_control : unit -> Gc.control Term.t
-(** [gc_control ()] is a term that evaluates to a value of type [Gc.control].
-    The default values are from [Gc.get ()] (hence the [()] parameter).
+val gc_control : default:Gc.control -> Gc.control Term.t
+(** [gc_control] is a term that evaluates to a value of type [Gc.control].
+    [default] is the default value if the parameter is not provided on the
+    command-line..
 
     The OCaml garbage collector can be configured, as described in detail in
     {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/Gc.html#TYPEcontrol} GC
@@ -39,7 +40,7 @@ val gc_control : unit -> Gc.control Term.t
 val setup :
   ?backtrace:bool option ->
   ?randomize_hashtables:bool option ->
-  ?gc_control:bool ->
+  ?gc_control:Gc.control option ->
   unit ->
   unit Term.t
 (** [setup ?backtrace ?randomize_hashtables ?gc_control ()] is the term that set
@@ -54,5 +55,7 @@ val setup :
       [Hashtable.randomize ()]. [d] is the default if no paramaters are
       provided. If not set, [randomize_hashtables] is set to [Some false] to
       match the default OCaml runtime behavior.
-    - if [gc_control] is set, various control parameters are added to the
-      command-line options will cause [Gc.set] with the right parameters. *)
+    - if [gc_control] is set to [Some d], various control parameters are added
+      to the command-line options that will cause [Gc.set] with the right
+      parameters. [d] is the default if no parameters are provided. If not set,
+      [gc_control] is [Some (Gc.get ())]. *)
