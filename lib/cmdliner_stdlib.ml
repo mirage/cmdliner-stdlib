@@ -16,20 +16,20 @@ open Cmdliner
 
 let ocaml_section = "OCAML RUNTIME PARAMETERS"
 
-let backtrace =
+let backtrace ~default =
   let doc =
     "Trigger the printing of a stack backtrace when an uncaught exception \
      aborts the unikernel."
   in
   let doc = Arg.info ~docs:ocaml_section ~docv:"BOOL" ~doc [ "backtrace" ] in
-  Arg.(value & opt bool true doc)
+  Arg.(value & opt bool default doc)
 
-let randomize_hashtables =
+let randomize_hashtables ~default =
   let doc = "Turn on randomization of all hash tables by default." in
   let doc =
     Arg.info ~docs:ocaml_section ~docv:"BOOL" ~doc [ "randomize-hashtables" ]
   in
-  Arg.(value & opt bool true doc)
+  Arg.(value & opt bool default doc)
 
 let policy_of_int = function
   | 0 -> `Next_fit
@@ -154,8 +154,7 @@ let stack_limit d =
   let doc = Arg.info ~docs:ocaml_section ~docv:"WORDS" ~doc [ "stack-limit" ] in
   Arg.(value & opt int d.Gc.stack_limit doc)
 
-let gc_control () =
-  let d = Gc.get () in
+let gc_control ~default =
   let f minor_heap_size major_heap_increment space_overhead verbose max_overhead
       stack_limit allocation_policy window_size custom_major_ratio
       custom_minor_ratio custom_minor_max_size =
@@ -176,20 +175,20 @@ let gc_control () =
   in
   Term.(
     const f
-    $ minor_heap_size d
-    $ major_heap_increment d
-    $ space_overhead d
-    $ gc_verbosity d
-    $ max_space_overhead d
-    $ stack_limit d
-    $ allocation_policy d
-    $ gc_window_size d
-    $ custom_major_ratio d
-    $ custom_minor_ratio d
-    $ custom_minor_max_size d)
+    $ minor_heap_size default
+    $ major_heap_increment default
+    $ space_overhead default
+    $ gc_verbosity default
+    $ max_space_overhead default
+    $ stack_limit default
+    $ allocation_policy default
+    $ gc_window_size default
+    $ custom_major_ratio default
+    $ custom_minor_ratio default
+    $ custom_minor_max_size default)
 
-let setup ?backtrace:(b = true) ?randomize_hashtables:(r = true)
-    ?gc_control:(c = true) () =
+let setup ?backtrace:(b = Some false) ?randomize_hashtables:(r = Some false)
+    ?gc_control:(c = Some (Gc.get ())) () =
   let f backtrace randomize_hashtables gc_control =
     let () =
       match backtrace with None -> () | Some b -> Printexc.record_backtrace b
@@ -204,7 +203,8 @@ let setup ?backtrace:(b = true) ?randomize_hashtables:(r = true)
   in
   let some c = Term.(const Option.some $ c) in
   let none = Term.const None in
-  let b = if b then some backtrace else none in
-  let r = if r then some randomize_hashtables else none in
-  let c = if c then some (gc_control ()) else none in
+  let fold f d = Option.fold ~none ~some:(fun d -> some (f ~default:d)) d in
+  let b = fold backtrace b in
+  let r = fold randomize_hashtables r in
+  let c = fold gc_control c in
   Term.(const f $ b $ r $ c)

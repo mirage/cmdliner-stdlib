@@ -43,7 +43,16 @@ $ dune exec -- ./hello.exe --allocation-policy=first-fit --backtrace=true
 You can disable some of these arguments. For instance, to disable GC control use:
 
 ```ocaml
-   Cmdliner_stdlib.setup ~gc_control:false ()
+   Cmdliner_stdlib.setup ~gc_control:None ()
+```
+
+Or to change the default allocation policy to be `first-fit`:
+
+
+```ocaml
+  let default = Gc.get () in
+  let gc_control = Some { default with allocation_policy = 1 } in
+  Cmdliner_stdlib.setup ~gc_control ()
 ```
 
 ## Contributions

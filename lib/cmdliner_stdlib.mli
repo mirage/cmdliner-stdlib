@@ -19,33 +19,43 @@ open Cmdliner
     The OCaml runtime is usually configurable via the [OCAMLRUNPARAM]
     environment variable. We provide boot parameters covering these options. *)
 
-val backtrace : bool Term.t
+val backtrace : default:bool -> bool Term.t
 (** [--backtrace]: Output a backtrace if an uncaught exception terminated the
-    application. *)
+    application. [default] is the default value if the parameter is not provided
+    on the command-line. *)
 
-val randomize_hashtables : bool Term.t
-(** [--randomize-hashtables]: Randomize all hash tables. *)
+val randomize_hashtables : default:bool -> bool Term.t
+(** [--randomize-hashtables]: Randomize all hash tables. [default] is the
+    default value if the parameter is not provided on the command-line. *)
 
-val gc_control : unit -> Gc.control Term.t
-(** [gc_control ()] is a term that evaluates to a value of type [Gc.control].
-    The default values are from [Gc.get ()] (hence the [()] parameter).
+val gc_control : default:Gc.control -> Gc.control Term.t
+(** [gc_control] is a term that evaluates to a value of type [Gc.control].
+    [default] is the default value if the parameter is not provided on the
+    command-line..
 
     The OCaml garbage collector can be configured, as described in detail in
     {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/Gc.html#TYPEcontrol} GC
       control}. *)
 
 val setup :
-  ?backtrace:bool ->
-  ?randomize_hashtables:bool ->
-  ?gc_control:bool ->
+  ?backtrace:bool option ->
+  ?randomize_hashtables:bool option ->
+  ?gc_control:Gc.control option ->
   unit ->
   unit Term.t
 (** [setup ?backtrace ?randomize_hashtables ?gc_control ()] is the term that set
     the corresponding OCaml runtime parameters:
 
-    - if [backtrace] is set, adding [--backtrace] on the command-line will call
-      [Printexc.record_backtrace true].
-    - if [randomize_hashtables] is set, adding [--randomize-hashtables] to the
-      command-line will call [Hashtable.randomize ()].
-    - if [gc_control] is set, various control parameters are added to the
-      command-line options will cause `Gc.set` with the right parameters. *)
+    - if [backtrace] is set to [Some d], adding [--backtrace] on the
+      command-line will call [Printexc.record_backtrace]. [d] is the default if
+      case no parameters are provided. If not set, [backtrace] is [Some false]
+      to match the default OCaml runtime behavior.
+    - if [randomize_hashtables] is set to [Some d], adding
+      [--randomize-hashtables] to the command-line will call
+      [Hashtable.randomize ()]. [d] is the default if no paramaters are
+      provided. If not set, [randomize_hashtables] is set to [Some false] to
+      match the default OCaml runtime behavior.
+    - if [gc_control] is set to [Some d], various control parameters are added
+      to the command-line options that will cause [Gc.set] with the right
+      parameters. [d] is the default if no parameters are provided. If not set,
+      [gc_control] is [Some (Gc.get ())]. *)
