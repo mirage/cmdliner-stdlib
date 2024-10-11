@@ -14,7 +14,7 @@
 
 open Cmdliner
 
-let ocaml_section = "OCAML RUNTIME PARAMETERS"
+let ocaml_section = "OCAML RUNTIME OPTIONS"
 
 let backtrace ~default =
   let doc =
